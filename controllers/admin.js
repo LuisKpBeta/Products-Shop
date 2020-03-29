@@ -10,7 +10,13 @@ exports.getAddProduct = (req, res, next) => {
 exports.postAddProduct = async (req, res, next) => {
   const { title, imageUrl, price, description } = req.body;
   try {
-    const product = new Product({ title, price, description, imageUrl });
+    const product = new Product({
+      title,
+      price,
+      description,
+      imageUrl,
+      userId: req.user._id
+    });
     await product.save();
     console.log("Created Product");
     res.redirect("/admin/products");
@@ -53,7 +59,8 @@ exports.postEditProduct = async (req, res, next) => {
 };
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find().populate("userId", "name");
+    console.log(products);
     res.render("admin/products", {
       prods: products,
       pageTitle: "Admin Products",
