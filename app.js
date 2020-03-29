@@ -1,3 +1,4 @@
+require("dotenv").config();
 const path = require("path");
 
 const express = require("express");
@@ -32,10 +33,11 @@ app.use(shopRoutes);
 app.use(errorController.get404);
 
 mongoose
-  .connect(
-    "mongodb+srv://luiscarlosb3:lMc5ihSLgOlvPsHL@cluster0-3zmqn.mongodb.net/shop?retryWrites=true",
-    { useUnifiedTopology: true, useNewUrlParser: true, useFindAndModify: false }
-  )
+  .connect(process.env.DATABASE_URL, {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useFindAndModify: false
+  })
   .then(() => {
     User.findOne().then(user => {
       if (!user) {
