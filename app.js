@@ -4,7 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 
 const errorController = require("./controllers/error");
-// const User = require("./models/user");
+const User = require("./models/user");
 const mongoose = require("mongoose");
 const app = express();
 
@@ -17,14 +17,14 @@ const shopRoutes = require("./routes/shop");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// app.use((req, res, next) => {
-// User.findById("5baa2528563f16379fc8a610")
-//   .then(user => {
-//     req.user = new User(user.name, user.email, user.cart, user._id);
-//   next();
-//   })
-//   .catch(err => console.log(err));
-// });
+app.use((req, res, next) => {
+  User.findById("5e80eadcc4e6c00994f1dba5")
+    .then(user => {
+      req.user = user;
+      next();
+    })
+    .catch(err => console.log(err));
+});
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
@@ -37,6 +37,16 @@ mongoose
     { useUnifiedTopology: true, useNewUrlParser: true, useFindAndModify: false }
   )
   .then(() => {
+    User.findOne().then(user => {
+      if (!user) {
+        const user = new User({
+          name: "Luis",
+          email: "luis@text.com",
+          cart: { items: [] }
+        });
+        user.save();
+      }
+    });
     app.listen(3000, () => {
       console.log("server at 3000");
     });
