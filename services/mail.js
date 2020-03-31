@@ -21,7 +21,21 @@ const sendMail = async email => {
   });
   console.log("Message sent: %s", info.messageId);
 };
+const resetPassword = async (email, token) => {
+  let info = await transporter.sendMail({
+    from: "shop_products@sendmail.com", // sender address
+    to: email, // list of receivers
+    subject: "Reset Password", // Subject line
+    html: `
+      <p>You request a password reset</p>
+      <p>Click this link to set a new password</p>  
+      <a href="http://localhost:3000/reset/${token}">RESET PASSWORD</a>
+    ` // html body
+  });
+  console.log("Message sent: %s", info.messageId);
+};
 module.exports = {
   initMailServer,
-  sendMail
+  sendMail,
+  resetPassword
 };

@@ -5,4 +5,8 @@ authRouter.post("/login", authController.login);
 authRouter.post("/logout", authController.logout);
 authRouter.get("/signup", authController.getSignup);
 authRouter.post("/signup", authController.signup);
+authRouter.get("/reset", authController.getReset);
+authRouter.post("/reset", authController.reset);
+authRouter.get("/reset/:token", authController.getNewPassword);
+authRouter.post("/new-password", authController.updatePassword);
 module.exports = authRouter;
