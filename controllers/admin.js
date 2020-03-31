@@ -59,7 +59,7 @@ exports.postEditProduct = async (req, res, next) => {
 };
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.find().populate("userId", "name");
+    const products = await Product.find().populate("userId", "email");
     console.log(products);
     res.render("admin/products", {
       prods: products,

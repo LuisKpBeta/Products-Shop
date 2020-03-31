@@ -9,7 +9,7 @@ exports.getProducts = async (req, res, next) => {
       path: "/products"
     });
   } catch (error) {
-    console.log(err);
+    console.log(error);
   }
 };
 exports.getProduct = async (req, res, next) => {
@@ -22,7 +22,7 @@ exports.getProduct = async (req, res, next) => {
       path: "/products"
     });
   } catch (error) {
-    console.log(err);
+    console.log(error);
   }
 };
 exports.getIndex = async (req, res, next) => {
@@ -34,10 +34,9 @@ exports.getIndex = async (req, res, next) => {
       path: "/"
     });
   } catch (error) {
-    console.log(err);
+    console.log(error);
   }
 };
-
 exports.getCart = async (req, res, next) => {
   try {
     const user = await req.user.populate("cart.items.productId").execPopulate();
@@ -71,7 +70,6 @@ exports.postCartDeleteProduct = async (req, res, next) => {
     console.log(error);
   }
 };
-
 exports.postOrder = async (req, res, next) => {
   try {
     const user = await req.user.populate("cart.items.productId").execPopulate();
@@ -89,11 +87,10 @@ exports.postOrder = async (req, res, next) => {
     console.log(error);
   }
 };
-
 exports.getOrders = async (req, res, next) => {
   try {
     const orders = await Order.find({ userId: req.user._id })
-      .populate("userId", "name email")
+      .populate("userId", "email")
       .populate("products.product");
     console.log(orders);
 
