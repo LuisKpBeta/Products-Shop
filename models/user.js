@@ -52,11 +52,9 @@ user.methods.addToCart = function(product) {
   return this.save();
 };
 user.methods.deleteItemFromCart = function(productId) {
-  console.log(productId);
   const updateCartItems = this.cart.items.filter(item => {
     return item._id.toString() !== productId.toString();
   });
-  console.log(updateCartItems);
   this.cart.items = updateCartItems;
   return this.save();
 };

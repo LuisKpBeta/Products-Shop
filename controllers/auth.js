@@ -73,7 +73,6 @@ exports.getReset = (req, res, next) => {
   message = message.length > 0 ? message[0] : null;
   let error = req.flash("error");
   error = error.length > 0 ? error[0] : null;
-  console.log(message);
   res.render("auth/reset", {
     path: "/reset",
     pageTitle: "Reset Password",
@@ -94,7 +93,6 @@ exports.reset = (req, res, next) => {
         req.flash("error", "No account with that email found");
         return res.redirect("/reset");
       }
-      console.log("reseting user");
       user.resetToken = token;
       user.resetTokenExpiration = Date.now() + 3600000;
       await user.save();
