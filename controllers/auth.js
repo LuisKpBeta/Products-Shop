@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
+const emailService = require("../services/mail");
 exports.getLogin = (req, res, next) => {
   let message = req.flash("error");
   message = message.length > 0 ? message[0] : null;
@@ -52,6 +53,7 @@ exports.signup = async (req, res, next) => {
         cart: { items: [] }
       });
       await user.save();
+      emailService.sendMail(user.email);
       return res.redirect("/login");
     }
   } catch (error) {

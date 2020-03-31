@@ -11,6 +11,7 @@ const mongoose = require("mongoose");
 const csrf = require("csurf");
 const csrfProtection = csrf();
 const flash = require("connect-flash");
+const mailServer = require("./services/mail");
 const app = express();
 
 app.set("view engine", "ejs");
@@ -65,6 +66,7 @@ mongoose
     useCreateIndex: true
   })
   .then(() => {
+    mailServer.initMailServer();
     app.listen(3000, () => {
       console.log("server at 3000");
     });
