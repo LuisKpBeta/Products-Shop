@@ -37,7 +37,9 @@ exports.postAddProduct = async (req, res, next) => {
     await product.save();
     res.redirect("/admin/products");
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.getEditProduct = async (req, res, next) => {
@@ -60,7 +62,9 @@ exports.getEditProduct = async (req, res, next) => {
       fields: []
     });
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.postEditProduct = async (req, res, next) => {
@@ -91,7 +95,9 @@ exports.postEditProduct = async (req, res, next) => {
     await product.save();
     res.redirect("/admin/products");
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.getProducts = async (req, res, next) => {
@@ -106,7 +112,9 @@ exports.getProducts = async (req, res, next) => {
       path: "/admin/products"
     });
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.postDeleteProduct = async (req, res, next) => {
@@ -115,6 +123,8 @@ exports.postDeleteProduct = async (req, res, next) => {
     await Product.deleteOne({ _id: prodId, userId: req.user._id });
     res.redirect("/admin/products");
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };

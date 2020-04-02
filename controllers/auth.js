@@ -24,7 +24,6 @@ exports.login = async (req, res, next) => {
     const { email, password } = req.body;
     const errors = validationResult(req);
     if (errors.array().length > 0) {
-      console.log(errors);
       const fields = errors.array().map(err => {
         return err.param;
       });
@@ -52,7 +51,9 @@ exports.login = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.signup = async (req, res, next) => {
@@ -75,11 +76,12 @@ exports.signup = async (req, res, next) => {
       cart: { items: [] }
     });
     await user.save();
-    //TODO remove this comment
-    //emailService.sendMail(user.email);
+    emailService.sendMail(user.email);
     return res.redirect("/login");
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.getSignup = async (req, res, next) => {
@@ -129,7 +131,9 @@ exports.reset = (req, res, next) => {
       return res.redirect("/reset");
     });
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.logout = (req, res, next) => {
@@ -159,7 +163,9 @@ exports.getNewPassword = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.updatePassword = async (req, res, next) => {
@@ -180,6 +186,8 @@ exports.updatePassword = async (req, res, next) => {
     req.flash("message", "Password updated");
     res.redirect("/login");
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };

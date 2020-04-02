@@ -9,7 +9,9 @@ exports.getProducts = async (req, res, next) => {
       path: "/products"
     });
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.getProduct = async (req, res, next) => {
@@ -22,7 +24,9 @@ exports.getProduct = async (req, res, next) => {
       path: "/products"
     });
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.getIndex = async (req, res, next) => {
@@ -34,7 +38,9 @@ exports.getIndex = async (req, res, next) => {
       path: "/"
     });
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.getCart = async (req, res, next) => {
@@ -47,7 +53,9 @@ exports.getCart = async (req, res, next) => {
       products
     });
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.postCart = async (req, res, next) => {
@@ -57,7 +65,9 @@ exports.postCart = async (req, res, next) => {
     await req.user.addToCart(product);
     res.redirect("/cart");
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.postCartDeleteProduct = async (req, res, next) => {
@@ -66,7 +76,9 @@ exports.postCartDeleteProduct = async (req, res, next) => {
     await req.user.deleteItemFromCart(prodId);
     res.redirect("/cart");
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.postOrder = async (req, res, next) => {
@@ -83,7 +95,9 @@ exports.postOrder = async (req, res, next) => {
     await req.user.clearCart();
     res.redirect("/orders");
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
 exports.getOrders = async (req, res, next) => {
@@ -98,6 +112,8 @@ exports.getOrders = async (req, res, next) => {
       orders: orders
     });
   } catch (error) {
-    console.log(error);
+    const err = new Error(error);
+    err.httpStatus = 500;
+    next(err);
   }
 };
