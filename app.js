@@ -27,7 +27,7 @@ const store = new mongoDBstore({
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
-app.use(flash());
+
 app.use(
   session({
     secret: "mysecretAtsessionExpress",
@@ -37,6 +37,7 @@ app.use(
   })
 );
 app.use(csrfProtection);
+app.use(flash());
 app.use((req, res, next) => {
   if (!req.session.user) {
     return next();

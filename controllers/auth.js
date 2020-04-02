@@ -2,28 +2,46 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const emailService = require("../services/mail");
 const crypto = require("crypto");
+const { validationResult } = require("express-validator");
 exports.getLogin = (req, res, next) => {
   let message = req.flash("message");
   message = message.length > 0 ? message[0] : null;
   let error = req.flash("error");
   error = error.length > 0 ? error[0] : null;
+  const oldInput = req.flash("oldInput")[0] || "";
+  const fields = req.flash("fields") || [];
   res.render("auth/login", {
     path: "/login",
     pageTitle: "Login",
     error,
-    message
+    message,
+    oldInput,
+    fields
   });
 };
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    const errors = validationResult(req);
+    if (errors.array().length > 0) {
+      console.log(errors);
+      const fields = errors.array().map(err => {
+        return err.param;
+      });
+      req.flash("fields", fields);
+      req.flash("oldInput", email);
+      req.flash("error", errors.array()[0].msg);
+      return res.status(422).redirect("/login");
+    }
     const user = await User.findOne({ email });
     if (!user) {
+      req.flash("fields", ["email"]);
       req.flash("error", "E-mail not exists");
       return res.redirect("/login");
     } else {
       const isCorretPassword = await bcrypt.compare(password, user.password);
       if (!isCorretPassword) {
+        req.flash("fields", ["password"]);
         req.flash("error", "Invalid Password");
         return res.redirect("/login");
       }
@@ -39,22 +57,27 @@ exports.login = async (req, res, next) => {
 };
 exports.signup = async (req, res, next) => {
   try {
-    const { email, password, confirmPassword } = req.body;
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail) {
-      req.flash("error", "E-mail already exists");
-      return res.redirect("/signup");
-    } else {
-      const hashedPassword = await bcrypt.hash(password, 12);
-      const user = new User({
-        email,
-        password: hashedPassword,
-        cart: { items: [] }
+    const { email, password } = req.body;
+    const errors = validationResult(req);
+    if (errors.array().length > 0) {
+      const fields = errors.array().map(err => {
+        return err.param;
       });
-      await user.save();
-      emailService.sendMail(user.email);
-      return res.redirect("/login");
+      req.flash("fields", fields);
+      req.flash("oldInput", { email, password });
+      req.flash("error", errors.array()[0].msg);
+      return res.status(422).redirect("/signup");
     }
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const user = new User({
+      email,
+      password: hashedPassword,
+      cart: { items: [] }
+    });
+    await user.save();
+    //TODO remove this comment
+    //emailService.sendMail(user.email);
+    return res.redirect("/login");
   } catch (error) {
     console.log(error);
   }
@@ -62,10 +85,15 @@ exports.signup = async (req, res, next) => {
 exports.getSignup = async (req, res, next) => {
   let message = req.flash("error");
   message = message.length > 0 ? message[0] : null;
+  const oldInput = req.flash("oldInput")[0] || { email: "", password: "" };
+  const fields = req.flash("fields");
+  console.log(fields);
   res.render("auth/signup", {
-    path: "/login",
-    pageTitle: "Login",
-    error: message
+    path: "/signup",
+    pageTitle: "Signup",
+    error: message,
+    oldInput,
+    fields
   });
 };
 exports.getReset = (req, res, next) => {
