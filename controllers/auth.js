@@ -16,7 +16,7 @@ exports.getLogin = (req, res, next) => {
     error,
     message,
     oldInput,
-    fields
+    fields,
   });
 };
 exports.login = async (req, res, next) => {
@@ -24,7 +24,7 @@ exports.login = async (req, res, next) => {
     const { email, password } = req.body;
     const errors = validationResult(req);
     if (errors.array().length > 0) {
-      const fields = errors.array().map(err => {
+      const fields = errors.array().map((err) => {
         return err.param;
       });
       req.flash("fields", fields);
@@ -61,7 +61,7 @@ exports.signup = async (req, res, next) => {
     const { email, password } = req.body;
     const errors = validationResult(req);
     if (errors.array().length > 0) {
-      const fields = errors.array().map(err => {
+      const fields = errors.array().map((err) => {
         return err.param;
       });
       req.flash("fields", fields);
@@ -73,9 +73,10 @@ exports.signup = async (req, res, next) => {
     const user = new User({
       email,
       password: hashedPassword,
-      cart: { items: [] }
+      cart: { items: [] },
     });
     await user.save();
+    console.log(user);
     emailService.sendMail(user.email);
     return res.redirect("/login");
   } catch (error) {
@@ -95,7 +96,7 @@ exports.getSignup = async (req, res, next) => {
     pageTitle: "Signup",
     error: message,
     oldInput,
-    fields
+    fields,
   });
 };
 exports.getReset = (req, res, next) => {
@@ -107,7 +108,7 @@ exports.getReset = (req, res, next) => {
     path: "/reset",
     pageTitle: "Reset Password",
     message,
-    error
+    error,
   });
 };
 exports.reset = (req, res, next) => {
@@ -148,7 +149,7 @@ exports.getNewPassword = async (req, res, next) => {
     const token = req.params.token;
     const user = await User.findOne({
       resetToken: token,
-      resetTokenExpiration: { $gt: Date.now() }
+      resetTokenExpiration: { $gt: Date.now() },
     });
     if (!user) {
       req.flash("error", "Token invalid");
@@ -159,7 +160,7 @@ exports.getNewPassword = async (req, res, next) => {
         pageTitle: "New Password",
         userId: user._id,
         passwordToken: token,
-        error
+        error,
       });
     }
   } catch (error) {
@@ -174,7 +175,7 @@ exports.updatePassword = async (req, res, next) => {
     const user = await User.findOne({
       _id: userId,
       resetToken: passwordToken,
-      resetTokenExpiration: { $gt: Date.now() }
+      resetTokenExpiration: { $gt: Date.now() },
     });
     if (!user) {
       req.flash("error", "Token invalid");

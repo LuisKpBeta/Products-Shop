@@ -1,12 +1,15 @@
 const Product = require("../models/product");
 const Order = require("../models/order");
+const fs = require("fs");
+const path = require("path");
+const PDFDocument = require("pdfkit");
 exports.getProducts = async (req, res, next) => {
   try {
     const products = await Product.find();
     res.render("shop/product-list", {
       prods: products,
       pageTitle: "All Products",
-      path: "/products"
+      path: "/products",
     });
   } catch (error) {
     const err = new Error(error);
@@ -21,7 +24,7 @@ exports.getProduct = async (req, res, next) => {
     res.render("shop/product-detail", {
       product: product,
       pageTitle: product.title,
-      path: "/products"
+      path: "/products",
     });
   } catch (error) {
     const err = new Error(error);
@@ -35,7 +38,7 @@ exports.getIndex = async (req, res, next) => {
     res.render("shop/index", {
       prods: products,
       pageTitle: "Shop",
-      path: "/"
+      path: "/",
     });
   } catch (error) {
     const err = new Error(error);
@@ -50,7 +53,7 @@ exports.getCart = async (req, res, next) => {
     res.render("shop/cart", {
       path: "/cart",
       pageTitle: "Your Cart",
-      products
+      products,
     });
   } catch (error) {
     const err = new Error(error);
@@ -84,12 +87,12 @@ exports.postCartDeleteProduct = async (req, res, next) => {
 exports.postOrder = async (req, res, next) => {
   try {
     const user = await req.user.populate("cart.items.productId").execPopulate();
-    const cartItems = user.cart.items.map(item => {
+    const cartItems = user.cart.items.map((item) => {
       return { quantity: item.quantity, product: item.productId };
     });
     const order = new Order({
       userId: req.user,
-      products: cartItems
+      products: cartItems,
     });
     await order.save();
     await req.user.clearCart();
@@ -109,11 +112,55 @@ exports.getOrders = async (req, res, next) => {
     res.render("shop/orders", {
       path: "/orders",
       pageTitle: "Your Orders",
-      orders: orders
+      orders: orders,
     });
   } catch (error) {
     const err = new Error(error);
     err.httpStatus = 500;
     next(err);
+  }
+};
+exports.getInvoice = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId).populate("products.product");
+    if (!order) {
+      const error = new Error("No order founded");
+      error.status = 400;
+      throw error;
+    }
+    if (order.userId.toString() !== req.user._id.toString()) {
+      const error = new Error("Not authorized");
+      error.status = 401;
+      throw error;
+    }
+    const invoiceName = "invoice-" + orderId + ".pdf";
+    const invoicepath = path.join("invoices", invoiceName);
+    const pdfDoc = new PDFDocument();
+    pdfDoc.pipe(fs.createWriteStream(invoicepath));
+
+    pdfDoc.fontSize(26).text("Invoice");
+    pdfDoc.text("\n");
+    let totalPrice = 0;
+    order.products.forEach((item) => {
+      totalPrice += item.quantity * item.product.price;
+      pdfDoc.text(
+        item.product.title + ":" + item.quantity + " x $" + item.product.price
+      );
+    });
+    pdfDoc.text("\n");
+    pdfDoc.text("Total: $" + totalPrice);
+    pdfDoc.end();
+    pdfDoc.pipe(res);
+
+    // res.setHeader("Content-Type", "application/pdf");
+    // res.setHeader(
+    //   "Content-Disposition",
+    //   'inline; filename="' + invoiceName + '"'
+    // );
+    // file.pipe(res);
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
 };

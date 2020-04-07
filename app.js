@@ -12,6 +12,7 @@ const csrf = require("csurf");
 const csrfProtection = csrf();
 const flash = require("connect-flash");
 const mailServer = require("./services/mail");
+const multer = require("multer");
 const app = express();
 
 app.set("view engine", "ejs");
@@ -22,18 +23,40 @@ const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
 const store = new mongoDBstore({
   uri: process.env.DATABASE_URL,
-  collection: "sessions"
+  collection: "sessions",
 });
-
+const fileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "./images");
+  },
+  filename: (req, file, cb) => {
+    const fileName = Date.now() + file.originalname;
+    cb(null, fileName);
+  },
+});
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === "image/png" ||
+    file.mimetype === "image/jpg" ||
+    file.mimetype === "image/jpeg"
+  ) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(
+  multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
+);
 app.use(express.static(path.join(__dirname, "public")));
-
+app.use("/images", express.static(path.join(__dirname, "images")));
 app.use(
   session({
     secret: "mysecretAtsessionExpress",
     resave: false,
     saveUninitialized: false,
-    store: store
+    store: store,
   })
 );
 app.use(csrfProtection);
@@ -48,14 +71,14 @@ app.use((req, res, next) => {
     return next();
   }
   User.findById(req.session.user._id)
-    .then(user => {
+    .then((user) => {
       if (!user) {
         return next();
       }
       req.user = user;
       next();
     })
-    .catch(err => {
+    .catch((err) => {
       next(new Error(err));
     });
 });
@@ -67,9 +90,11 @@ app.use("/500", errorController.get500);
 app.use(errorController.get404);
 app.use((error, req, res, next) => {
   console.log(error);
+  console.log(req.session);
   res.status(500).render("500", {
     pageTitle: "Error",
-    path: "/500"
+    path: "/500",
+    isAuthenticated: false,
   });
 });
 mongoose
@@ -77,7 +102,7 @@ mongoose
     useUnifiedTopology: true,
     useNewUrlParser: true,
     useFindAndModify: false,
-    useCreateIndex: true
+    useCreateIndex: true,
   })
   .then(() => {
     mailServer.initMailServer();
@@ -85,6 +110,6 @@ mongoose
       console.log("server at 3000");
     });
   })
-  .catch(err => {
+  .catch((err) => {
     console.log(err);
   });

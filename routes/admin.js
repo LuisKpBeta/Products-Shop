@@ -4,17 +4,11 @@ const isAuth = require("../middlware/isAuth");
 const { body } = require("express-validator");
 //title, imageUrl, price, description
 const productValidator = [
-  body("title", "Title must be valid")
-    .trim()
-    .notEmpty()
-    .isLength({ min: 3 }),
-  body("imageUrl", "Image can't be empty")
-    .trim()
-    .notEmpty(),
+  body("title", "Title must be valid").trim().notEmpty().isLength({ min: 3 }),
   body("price", "Price must be valid").isFloat(),
   body("description", "Description must be valid (3-400 characters)")
     .trim()
-    .isLength({ min: 3, max: 400 })
+    .isLength({ min: 3, max: 400 }),
 ];
 router.get("/add-product", isAuth, adminController.getAddProduct);
 router.get("/products", isAuth, adminController.getProducts);

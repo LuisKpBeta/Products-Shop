@@ -1,5 +1,6 @@
 const Product = require("../models/product");
 const { validationResult } = require("express-validator");
+const fileHelper = require("../util/file");
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
     pageTitle: "Add Product",
@@ -7,15 +8,26 @@ exports.getAddProduct = (req, res, next) => {
     editing: false,
     error: null,
     product: { title: "", imageUrl: "", price: "", description: "" },
-    fields: []
+    fields: [],
   });
 };
 exports.postAddProduct = async (req, res, next) => {
-  const { title, imageUrl, price, description } = req.body;
+  const { title, price, description } = req.body;
+  const image = req.file;
   try {
+    if (!image) {
+      return res.render("admin/edit-product", {
+        pageTitle: "Add Product",
+        path: "/admin/add-product",
+        editing: false,
+        error: "Attached file is not an image",
+        product: { title, price, description },
+        fields: [],
+      });
+    }
     const errors = validationResult(req);
     if (errors.array().length > 0) {
-      const fields = errors.array().map(err => {
+      const fields = errors.array().map((err) => {
         return err.param;
       });
       return res.render("admin/edit-product", {
@@ -24,15 +36,17 @@ exports.postAddProduct = async (req, res, next) => {
         editing: false,
         error: errors.array()[0].msg,
         product: { title, imageUrl, price, description },
-        fields
+        fields,
       });
     }
+    const imageUrl = image.path;
+    console.log(image);
     const product = new Product({
       title,
       price,
       description,
       imageUrl,
-      userId: req.user._id
+      userId: req.user._id,
     });
     await product.save();
     res.redirect("/admin/products");
@@ -59,7 +73,7 @@ exports.getEditProduct = async (req, res, next) => {
       editing: editMode,
       product: product,
       error: null,
-      fields: []
+      fields: [],
     });
   } catch (error) {
     const err = new Error(error);
@@ -68,11 +82,12 @@ exports.getEditProduct = async (req, res, next) => {
   }
 };
 exports.postEditProduct = async (req, res, next) => {
-  const { productId, title, price, imageUrl, description } = req.body;
+  const { productId, title, price, description } = req.body;
+  const image = req.file;
   try {
     const errors = validationResult(req);
     if (errors.array().length > 0) {
-      const fields = errors.array().map(err => {
+      const fields = errors.array().map((err) => {
         return err.param;
       });
       return res.render("admin/edit-product", {
@@ -80,17 +95,20 @@ exports.postEditProduct = async (req, res, next) => {
         path: "/admin/add-product",
         editing: true,
         error: errors.array()[0].msg,
-        product: { _id: productId, title, imageUrl, price, description },
-        fields
+        product: { _id: productId, title, price, description },
+        fields,
       });
     }
     const product = await Product.findById(productId);
     if (product.userId.toString() !== req.user._id.toString()) {
       return res.redirect("/");
     }
+    if (image) {
+      fileHelper.deleteFile(product.imageUrl);
+      product.imageUrl = image.path;
+    }
     product.title = title;
     product.price = price;
-    product.imageUrl = imageUrl;
     product.description = description;
     await product.save();
     res.redirect("/admin/products");
@@ -109,7 +127,7 @@ exports.getProducts = async (req, res, next) => {
     res.render("admin/products", {
       prods: products,
       pageTitle: "Admin Products",
-      path: "/admin/products"
+      path: "/admin/products",
     });
   } catch (error) {
     const err = new Error(error);
@@ -120,6 +138,8 @@ exports.getProducts = async (req, res, next) => {
 exports.postDeleteProduct = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
+    const product = await Product.findById(prodId).select("imageUrl");
+    fileHelper.deleteFile(product.imageUrl);
     await Product.deleteOne({ _id: prodId, userId: req.user._id });
     res.redirect("/admin/products");
   } catch (error) {
