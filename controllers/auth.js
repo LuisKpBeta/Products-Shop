@@ -76,7 +76,6 @@ exports.signup = async (req, res, next) => {
       cart: { items: [] },
     });
     await user.save();
-    console.log(user);
     emailService.sendMail(user.email);
     return res.redirect("/login");
   } catch (error) {
@@ -90,7 +89,6 @@ exports.getSignup = async (req, res, next) => {
   message = message.length > 0 ? message[0] : null;
   const oldInput = req.flash("oldInput")[0] || { email: "", password: "" };
   const fields = req.flash("fields");
-  console.log(fields);
   res.render("auth/signup", {
     path: "/signup",
     pageTitle: "Signup",

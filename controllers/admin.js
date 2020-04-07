@@ -1,6 +1,7 @@
 const Product = require("../models/product");
 const { validationResult } = require("express-validator");
 const fileHelper = require("../util/file");
+const ITEMS_PER_PAGE = 4;
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
     pageTitle: "Add Product",
@@ -35,12 +36,11 @@ exports.postAddProduct = async (req, res, next) => {
         path: "/admin/add-product",
         editing: false,
         error: errors.array()[0].msg,
-        product: { title, imageUrl, price, description },
+        product: { title, price, description },
         fields,
       });
     }
     const imageUrl = image.path;
-    console.log(image);
     const product = new Product({
       title,
       price,
@@ -120,14 +120,23 @@ exports.postEditProduct = async (req, res, next) => {
 };
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.find({ userId: req.user._id }).populate(
-      "userId",
-      "email"
-    );
+    const page = +req.query.page || 1;
+    const total = await Product.find({ userId: req.user._id }).countDocuments();
+    const products = await Product.find({ userId: req.user._id })
+      .skip((page - 1) * ITEMS_PER_PAGE)
+      .limit(ITEMS_PER_PAGE)
+      .populate("userId", "email");
     res.render("admin/products", {
       prods: products,
       pageTitle: "Admin Products",
       path: "/admin/products",
+      currentPage: page,
+      total,
+      hasNext: ITEMS_PER_PAGE * page < total,
+      hasPrevious: page > 1,
+      nextPage: page + 1,
+      previousPage: page - 1,
+      lastPage: Math.ceil(total / ITEMS_PER_PAGE),
     });
   } catch (error) {
     const err = new Error(error);
