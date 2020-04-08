@@ -10,6 +10,7 @@ An application created with NodeJs and MongoDB (connection using mongoose). For 
 * **EMAIL_HOST** - for smtp server
 * **EMAIL_USER** - smtp user server
 * **EMAIL_PASS** - smtp password 
+* **STRIPE_KEY** - Stripe private key for payments controll
 
 ### Resources used (basic definition):
 * Express 
@@ -17,3 +18,4 @@ An application created with NodeJs and MongoDB (connection using mongoose). For 
 * MongoDB
 * EJS for Front-End
 * Nodemailer
+* Stripe for payment service

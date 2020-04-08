@@ -1,8 +1,10 @@
+require("dotenv").config();
 const Product = require("../models/product");
 const Order = require("../models/order");
 const fs = require("fs");
 const path = require("path");
 const PDFDocument = require("pdfkit");
+const stripe = require("stripe")(process.env.STRIPE_KEY);
 const ITEMS_PER_PAGE = 4;
 exports.getProducts = async (req, res, next) => {
   try {
@@ -107,7 +109,7 @@ exports.postCartDeleteProduct = async (req, res, next) => {
     next(err);
   }
 };
-exports.postOrder = async (req, res, next) => {
+exports.getCheckOutSucess = async (req, res, next) => {
   try {
     const user = await req.user.populate("cart.items.productId").execPopulate();
     const cartItems = user.cart.items.map((item) => {
@@ -124,6 +126,40 @@ exports.postOrder = async (req, res, next) => {
     const err = new Error(error);
     err.httpStatus = 500;
     next(err);
+  }
+};
+exports.getCheckOut = async (req, res, next) => {
+  try {
+    const user = await req.user.populate("cart.items.productId").execPopulate();
+    const products = user.cart.items;
+    let total = 0;
+    products.forEach((p) => {
+      total += p.quantity * p.productId.price;
+    });
+    const stripeKey = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: products.map((p) => {
+        return {
+          name: p.productId.title,
+          description: p.productId.description,
+          amount: p.productId.price * 100,
+          currency: "usd",
+          quantity: p.quantity,
+        };
+      }),
+      success_url: req.protocol + "://" + req.get("host") + "/checkout/success",
+      cancel_url: req.protocol + "://" + req.get("host") + "/checkout/cancel",
+    });
+    res.render("shop/checkout", {
+      path: "/checkout",
+      pageTitle: "Checkout",
+      products,
+      total,
+      sessionId: stripeKey.id,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
 };
 exports.getOrders = async (req, res, next) => {
