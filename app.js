@@ -1,6 +1,6 @@
 require("dotenv").config();
 const path = require("path");
-
+const fs = require("fs");
 const express = require("express");
 const bodyParser = require("body-parser");
 const session = require("express-session");
@@ -13,6 +13,7 @@ const csrfProtection = csrf();
 const flash = require("connect-flash");
 const mailServer = require("./services/mail");
 const multer = require("multer");
+const morgan = require("morgan");
 const app = express();
 
 app.set("view engine", "ejs");
@@ -21,6 +22,13 @@ app.set("views", "views");
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, "access.log"),
+  { flags: "a" }
+);
+
+app.use(morgan("combined", { stream: accessLogStream }));
+
 const store = new mongoDBstore({
   uri: process.env.DATABASE_URL,
   collection: "sessions",
